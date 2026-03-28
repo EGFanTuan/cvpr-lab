@@ -1,4 +1,4 @@
 **.deb
 
 build/
-**/output
+**/**output**
