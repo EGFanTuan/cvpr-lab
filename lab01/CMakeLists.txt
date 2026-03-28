@@ -7,3 +7,6 @@ find_package(OpenCV REQUIRED)
 
 add_executable(lab01 src/main.cpp)
 target_link_libraries(lab01 ${OpenCV_LIBS})
+
+add_executable(test_threshold src/test_threshold.cpp)
+target_link_libraries(test_threshold ${OpenCV_LIBS})
