@@ -12,11 +12,12 @@ int countElements(const Mat& image);
 Mat createBinaryMask(const Mat& image);
 void saveOverlapImage(const Mat& mask1, const Mat& mask2, const string& outputPath, const Scalar& color);
 void saveTripleOverlapImage(const Mat& mask1, const Mat& mask2, const Mat& mask3, const string& outputPath);
+void saveDebugCrop(const Mat& original, const Mat& mask, const string& elem, const string& outputPath);
 
 int main() {
     // 图像路径
-    string inputPath = "/home/kazusa/computer_vision/lab01/input/";
-    string outputPath = "/home/kazusa/computer_vision/lab01/output/";
+    string inputPath = "../input/";
+    string outputPath = "../output/";
     vector<string> elements = {"Al", "Fe", "P"};
     vector<Mat> masks;
     vector<int> counts;
@@ -37,6 +38,9 @@ int main() {
         // 保存二值图
         string binaryPath = outputPath + elem + "_binary.jpg";
         imwrite(binaryPath, mask);
+        
+        // 对比分割效果
+        saveDebugCrop(image, mask, elem, outputPath);
         
         // 统计元素数目
         int count = countElements(mask);
@@ -84,29 +88,79 @@ Mat createBinaryMask(const Mat& image) {
     inRange(hsv, Scalar(0, 0, 50), Scalar(180, 255, 255), mask);
     
     // 形态学操作，去除噪声
-    Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
-    morphologyEx(mask, mask, MORPH_OPEN, kernel);
-    morphologyEx(mask, mask, MORPH_CLOSE, kernel);
+    // 不需要了，保留完整矩形区域
+    // Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
+    // morphologyEx(mask, mask, MORPH_OPEN, kernel);
+    // morphologyEx(mask, mask, MORPH_CLOSE, kernel);
     
     return mask;
 }
 
 // 统计元素数目
 int countElements(const Mat& mask) {
-    // 查找轮廓
-    vector<vector<Point>> contours;
-    findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    if (countNonZero(mask) == 0) return 0;
+
+    // 前一版使用了“全局归一化(normalize)”，这是导致结果荒谬的元凶：
+    // 当原图里有一个特别大的色块时，最大距离会被拉得极高
+    // 按比例 0.3 截断时，所有面积较小的正常元素都被当做背景抹除了
+    // 而重叠部分(Overlap)因为没有大色块，最高值很低，小颗粒反而存活了，这就导致重叠数 > 原元素数
+    // 真的吗？
+
+    // 尝试使用轻度“腐蚀(Erode)”或者绝对距离来断开微小的粘连。
+    Mat processedMask;
+    // 使用 3x3 的十字形形态学核，它的“切断”能力最轻柔，
+    // 恰好能断开边缘只相连了 1 像素的相邻元素，又不会把小元素完全吃光。
+    Mat kernel = getStructuringElement(MORPH_CROSS, Size(3, 3));
+    erode(mask, processedMask, kernel);
     
-    // 过滤掉太小的轮廓（可能是噪声）
-    int count = 0;
-    for (const auto& contour : contours) {
-        double area = contourArea(contour);
-        if (area > 2) { // 阈值可以根据实际情况调整
-            count++;
+    // 如果腐蚀导致图像全黑（比如全是 1x1 散点），就回退到原 mask
+    if (countNonZero(processedMask) == 0) {
+        processedMask = mask;
+    }
+
+    // 转换为 8 连通域计算独立斑块的数量
+    Mat labels;
+    int count = connectedComponents(processedMask, labels, 8) - 1; // 减去的 1 为黑色背景区域
+    
+    return count > 0 ? count : 0;
+}
+
+// 专门用来切除30x30块进行调试对比的函数
+// 其实可能随机切更好？
+void saveDebugCrop(const Mat& original, const Mat& mask, const string& elem, const string& outputPath) {
+    Rect cropRect(0, 0, 0, 0);
+    // 寻找一个带有前景元素的区域
+    for (int y = 0; y < mask.rows - 30; ++y) {
+        for (int x = 0; x < mask.cols - 30; ++x) {
+            // 如果中心点有元素，就切这个 30x30 的块
+            if (mask.at<uchar>(y + 15, x + 15) > 0) {
+                cropRect = Rect(x, y, 30, 30);
+                break;
+            }
         }
+        if (cropRect.width > 0) break;
     }
     
-    return count;
+    if (cropRect.width == 0) return; // 如果全是黑的就算了
+
+    Mat origCrop = original(cropRect);
+    Mat maskCrop = mask(cropRect);
+    
+    // 模拟 countElements 里的腐蚀分离操作
+    Mat processedMask;
+    Mat kernel = getStructuringElement(MORPH_CROSS, Size(3, 3));
+    erode(maskCrop, processedMask, kernel);
+    if (countNonZero(processedMask) == 0) processedMask = maskCrop;
+
+    // 为了肉眼方便观察，用最近邻插值（以防模糊）放大10倍，变成 300x300
+    Mat visOrig, visMask, visProc;
+    resize(origCrop, visOrig, Size(300, 300), 0, 0, INTER_NEAREST);
+    resize(maskCrop, visMask, Size(300, 300), 0, 0, INTER_NEAREST);
+    resize(processedMask, visProc, Size(300, 300), 0, 0, INTER_NEAREST);
+
+    imwrite(outputPath + "debug_" + elem + "_1_orig.jpg", visOrig);
+    imwrite(outputPath + "debug_" + elem + "_2_mask.jpg", visMask);
+    imwrite(outputPath + "debug_" + elem + "_3_proc.jpg", visProc);
 }
 
 // 保存两元素重叠图像
