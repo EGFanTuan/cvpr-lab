@@ -7,7 +7,7 @@ using namespace cv;
 using namespace std;
 
 int main(int argc, char** argv) {
-    string imagePath = "input/picture.jpg";
+    string imagePath = string(PROJECT_DIR) + "/input/picture.jpg";
     if (argc > 1) {
         imagePath = argv[1];
     }
@@ -23,16 +23,17 @@ int main(int argc, char** argv) {
 
     GaussianBlur(gray, gray, Size(5, 5), 1.5);
 
+    Mat edgeImage;
+    Canny(gray, edgeImage, 50, 150);
+
     vector<Vec3f> circles;
-    HoughCircles(gray, circles, HOUGH_GRADIENT, 1,
-                 gray.rows / 8,
+    HoughCircles(edgeImage, circles, HOUGH_GRADIENT, 1,
+                 edgeImage.rows / 8,
                  100,
                  30,
                  80, 200);
 
     Mat result = image.clone();
-    Mat edgeImage;
-    Canny(gray, edgeImage, 50, 150);
 
     cout << "检测到 " << circles.size() << " 个钱币" << endl;
     cout << "========================================" << endl;
@@ -56,13 +57,7 @@ int main(int argc, char** argv) {
     imwrite(outputDir + "result.jpg", result);
     imwrite(outputDir + "edge.jpg", edgeImage);
 
-    imshow("原始图片", image);
-    imshow("Canny边缘", edgeImage);
-    imshow("检测结果", result);
-
     cout << "\n结果已保存到 " << outputDir << endl;
-    cout << "按任意键退出..." << endl;
-    waitKey(0);
 
     return 0;
 }
