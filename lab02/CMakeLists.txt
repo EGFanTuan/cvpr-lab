@@ -5,6 +5,6 @@ find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(lab02 src/main.cpp)
+add_executable(lab02 src/main.cpp src/m_detect.hpp)
 target_link_libraries(lab02 ${OpenCV_LIBS})
 target_compile_definitions(lab02 PRIVATE PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
