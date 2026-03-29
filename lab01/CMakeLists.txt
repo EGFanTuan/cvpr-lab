@@ -10,3 +10,6 @@ target_link_libraries(lab01 ${OpenCV_LIBS})
 
 add_executable(test_threshold src/test_threshold.cpp)
 target_link_libraries(test_threshold ${OpenCV_LIBS})
+
+add_executable(main_v2 src/main_v2.cpp)
+target_link_libraries(main_v2 ${OpenCV_LIBS})
