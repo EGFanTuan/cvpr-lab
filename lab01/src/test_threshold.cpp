@@ -21,8 +21,8 @@ int countElements(const Mat& mask) {
 }
 
 int main() {
-    string inputPath = "/home/kazusa/computer_vision/lab01/input/Fe.jpg";
-    string outputPath = "/home/kazusa/computer_vision/lab01/output/";
+    string inputPath = string(PROJECT_DIR) + "/input/Fe.jpg";
+    string outputPath = string(PROJECT_DIR) + "/output/";
     
     Mat image = imread(inputPath);
     if (image.empty()) {

@@ -7,3 +7,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(lab02 src/main.cpp)
 target_link_libraries(lab02 ${OpenCV_LIBS})
+target_compile_definitions(lab02 PRIVATE PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")

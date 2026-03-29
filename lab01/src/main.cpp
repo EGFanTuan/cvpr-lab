@@ -16,8 +16,8 @@ void saveDebugCrop(const Mat& original, const Mat& mask, const string& elem, con
 
 int main() {
     // 图像路径
-    string inputPath = "../input/";
-    string outputPath = "../output/";
+    string inputPath = string(PROJECT_DIR) + "/input/";
+    string outputPath = string(PROJECT_DIR) + "/output/";
     vector<string> elements = {"Al", "Fe", "P"};
     vector<Mat> masks;
     vector<int> counts;

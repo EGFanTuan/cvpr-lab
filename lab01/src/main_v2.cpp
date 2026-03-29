@@ -11,8 +11,8 @@ bool isNonBlack(const Vec3b& color) {
 }
 
 int main() {
-    string inputPath = "../input/";
-    string outputPath = "../output_v2/";
+    string inputPath = string(PROJECT_DIR) + "/input/";
+    string outputPath = string(PROJECT_DIR) + "/output_v2/";
     system(("mkdir -p " + outputPath).c_str());
     
     Mat alImg = imread(inputPath + "Al.jpg");
