@@ -244,3 +244,6 @@ SIFT特征在本实验中展现了良好的性能：
 - 调整拼接参数（如置信度阈值`pano_confidence_thresh`、融合宽度等）以适应不同场景；
 - 使用柱面投影或球面投影替代默认的平面投影，以提高大视角场景的拼接质量；
 - 探索基于深度学习的特征匹配方法（如SuperPoint + SuperGlue），在挑战性场景中获得更好的匹配效果。
+
+### 6. 仓库地址
+- GitHub: [https://github.com/EGFanTuan/cvpr-lab]
